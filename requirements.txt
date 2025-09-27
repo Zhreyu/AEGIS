@@ -1,0 +1,6 @@
+kaggle
+openai
+pandas
+pytest
+scikit_learn
+setuptools

@@ -1,0 +1,33 @@
+"""
+AEGIS Configuration Module
+
+This module contains all configuration settings for the security triage system.
+"""
+
+from .settings import (
+    AZURE_OPENAI_API_KEY,
+    AZURE_OPENAI_ENDPOINT,
+    AZURE_OPENAI_API_VERSION,
+    AZURE_OPENAI_DEPLOYMENT_NAME,
+    DATA_DIR,
+    GUIDE_DATA_PATH,
+    CICIDS_DATA_PATH,
+    TEAM_FUNCTION_DOCS_PATH,
+    HISTORICAL_INCIDENTS_PATH,
+    GUIDE_SAMPLE_SIZE,
+    CICIDS_SAMPLE_SIZE
+)
+
+__all__ = [
+    'AZURE_OPENAI_API_KEY',
+    'AZURE_OPENAI_ENDPOINT', 
+    'AZURE_OPENAI_API_VERSION',
+    'AZURE_OPENAI_DEPLOYMENT_NAME',
+    'DATA_DIR',
+    'GUIDE_DATA_PATH',
+    'CICIDS_DATA_PATH',
+    'TEAM_FUNCTION_DOCS_PATH',
+    'HISTORICAL_INCIDENTS_PATH',
+    'GUIDE_SAMPLE_SIZE',
+    'CICIDS_SAMPLE_SIZE'
+]

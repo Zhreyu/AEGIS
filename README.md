@@ -1,189 +1,258 @@
-# Multi-LLM-Agent Triage System
+# AEGIS - Advanced Security Triage System
 
-A sophisticated incident triage system that uses multiple Large Language Model (LLM) agents to automatically classify and assign security incidents to appropriate teams.
+A modular, object-oriented security incident triage system using multiple LLM agents for collaborative decision-making in security operations.
 
-## Architecture Overview
+## 🏗️ Architecture
 
-The system implements a multi-agent architecture with the following components:
+The AEGIS system is built with a clean, modular architecture following object-oriented principles:
 
-### Core Agents
+```
+AEGIS/
+├── src/                    # Main source code
+│   ├── agents/            # LLM agents for analysis and decision-making
+│   │   ├── base_agent.py
+│   │   ├── semantic_analyser.py
+│   │   ├── triage_decider.py
+│   │   ├── team_manager.py
+│   │   └── collaborative_decision.py
+│   ├── data/              # Data management and processing
+│   │   ├── data_manager.py
+│   │   ├── dataset_processor.py
+│   │   └── team_document_manager.py
+│   ├── core/              # Core triage system orchestration
+│   │   └── triage_system.py
+│   └── utils/             # Utility functions and helpers
+│       ├── logger.py
+│       ├── validators.py
+│       └── formatters.py
+├── config/                # Configuration management
+│   └── settings.py
+├── tests/                 # Test suite
+├── docs/                  # Documentation
+├── data/                  # Data storage directory
+├── main.py               # Main entry point
+├── requirements.txt      # Python dependencies
+└── setup.py             # Package setup
+```
 
-1. **Semantic Analyser Agent**: Extracts key phrases and performs semantic analysis of incident descriptions
-2. **Triage Decider Agent**: Uses TF-IDF similarity and LLM-based matching to select candidate teams
-3. **Team Manager Agents**: Represent different security teams and vote on incident acceptance
-4. **Collaborative Decision Group**: Facilitates negotiation and voting among team managers
+## 🚀 Features
 
-### Data Management
+- **Multi-Agent Architecture**: Specialized LLM agents for different aspects of triage
+- **Semantic Analysis**: Advanced incident description analysis and key phrase extraction
+- **Collaborative Decision-Making**: Team managers negotiate and vote on incident assignments
+- **Historical Data Integration**: TF-IDF similarity matching with historical incidents
+- **Modular Design**: Clean separation of concerns with extensible components
+- **Comprehensive Logging**: Detailed logging and monitoring capabilities
 
-- **DataManager**: Handles data ingestion, preprocessing, and storage
-- Supports GUIDE and CICIDS2017 datasets
-- Automatic team function document generation
-- Historical incident tracking for TF-IDF training
-
-## Installation and Setup
+## 🛠️ Installation
 
 ### Prerequisites
 
-```bash
-pip install openai scikit-learn pandas pyarrow
-```
+- Python 3.8 or higher
+- Azure OpenAI API access
+- Kaggle API key (for dataset download)
 
-### Kaggle API Setup
+### Setup
 
-1. Place your `kaggle.json` API key file in the project directory
-2. The system will automatically configure Kaggle access
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-org/AEGIS.git
+   cd AEGIS
+   ```
 
-### Running the System
+2. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-```bash
-python3.11 main.py
-```
+3. **Set up environment variables**:
+   ```bash
+   export AZURE_OPENAI_API_KEY="your-api-key"
+   export AZURE_OPENAI_ENDPOINT="your-endpoint"
+   export AZURE_OPENAI_API_VERSION="2024-12-01-preview"
+   export AZURE_OPENAI_DEPLOYMENT_NAME="gpt-4o"
+   ```
 
-## System Workflow
+4. **Download datasets** (optional):
+   ```bash
+   python download_kaggle_datasets.py
+   ```
 
-### Phase 1: Semantic Distillation
-- Analyzes incident descriptions using LLM
-- Extracts relevant key phrases
-- Identifies potentially relevant team documents
+## 🎯 Usage
 
-### Phase 2: Team Candidate Selection
-- Uses TF-IDF similarity with historical incidents
-- Performs LLM-based matching against team function documents
-- Combines results to create candidate team list
-
-### Phase 3: Incident Assignment Loop
-- Creates collaborative decision group with candidate teams
-- Conducts multi-round negotiation and voting
-- Teams can accept or reject incidents with justification
-
-### Phase 4: Final Triage Outcome
-- Assigns incident to accepting team
-- Logs decision process and rationale
-
-## Data Sources
-
-### CICIDS2017 Dataset
-- Network intrusion detection dataset
-- Contains various attack types: DoS, DDoS, Brute Force, etc.
-- Processed from parquet files for efficiency
-
-### GUIDE Dataset
-- Incident triage dataset
-- Contains historical incident descriptions and team assignments
-- Used for TF-IDF training and validation
-
-## Team Categories
-
-The system automatically identifies and creates teams based on data:
-
-- **Benign**: Normal network traffic and system behavior
-- **DoS/DDoS Attacks**: Denial of service incidents
-- **Brute Force**: Password and credential attacks
-- **Infiltration**: Unauthorized access attempts
-- **Web Attacks**: Application-layer security incidents
-- **Botnet**: Compromised system incidents
-- **Port Scan**: Network reconnaissance activities
-
-## Configuration
-
-### Azure OpenAI Integration
-The system uses Azure OpenAI for LLM capabilities. Configuration is handled in `triage_system.py`:
+### Basic Usage
 
 ```python
-AZURE_OPENAI_API_KEY = "your-api-key"
-AZURE_OPENAI_ENDPOINT = "your-endpoint"
-AZURE_OPENAI_API_VERSION = "2024-12-01-preview"
-AZURE_OPENAI_DEPLOYMENT_NAME = "gpt-4o"
+from src.core import TriageSystem
+
+# Initialize the triage system
+triage_system = TriageSystem()
+triage_system.setup_data_and_agents()
+
+# Triage an incident
+incident = "Database server experiencing high CPU usage and connection timeouts"
+result = triage_system.triage_incident(incident)
+
+print(result['final_result'])
 ```
 
-## Sample Usage
+### Running the Main Script
 
-The system processes various incident types:
+```bash
+python main.py
+```
+
+### Advanced Usage
 
 ```python
-sample_incidents = [
-    "Server outage in datacenter A, error code 503, high network latency.",
-    "Application unresponsive, database connection failed.",
-    "Suspicious network activity detected: multiple failed login attempts from unknown IP.",
-    "Unusual traffic spike, potential DoS attack on web server.",
-    "New malware detected on endpoint, requires immediate isolation."
+from src.core import TriageSystem
+from src.agents import SemanticAnalyserAgent, TriageDeciderAgent
+
+# Initialize components
+triage_system = TriageSystem()
+triage_system.setup_data_and_agents()
+
+# Batch processing
+incidents = [
+    "Server outage in datacenter A, error code 503",
+    "Suspicious network activity detected",
+    "Application unresponsive, database connection failed"
 ]
+
+results = triage_system.batch_triage_incidents(incidents)
+
+# Get system status
+status = triage_system.get_system_status()
+print(f"System initialized: {status['initialized']}")
+print(f"Available teams: {status['available_teams']}")
 ```
 
-## Output Format
+## 🧩 Components
 
-Each triage operation returns:
+### Agents (`src/agents/`)
+
+- **BaseLLMAgent**: Base class for all LLM agents
+- **SemanticAnalyserAgent**: Analyzes incidents and extracts key phrases
+- **TriageDeciderAgent**: Selects candidate teams using TF-IDF and LLM matching
+- **TeamManagerAgent**: Represents team managers for voting
+- **CollaborativeDecisionGroup**: Manages team negotiation and voting
+
+### Data Management (`src/data/`)
+
+- **DataManager**: Main data coordinator
+- **DatasetProcessor**: Processes GUIDE and CICIDS2017 datasets
+- **TeamDocumentManager**: Creates and manages team function documents
+
+### Core System (`src/core/`)
+
+- **TriageSystem**: Main orchestrator for the triage process
+
+### Utilities (`src/utils/`)
+
+- **Logger**: Logging configuration and utilities
+- **Validators**: Data validation functions
+- **Formatters**: Output formatting utilities
+
+## ⚙️ Configuration
+
+The system uses environment variables for configuration:
+
+```bash
+# Required
+AZURE_OPENAI_API_KEY=your-api-key
+AZURE_OPENAI_ENDPOINT=your-endpoint
+
+# Optional
+DATA_DIR=./data
+GUIDE_SAMPLE_SIZE=500
+CICIDS_SAMPLE_SIZE=500
+LOG_LEVEL=INFO
+```
+
+## 🧪 Testing
+
+```bash
+# Run tests
+pytest tests/
+
+# Run with coverage
+pytest --cov=src tests/
+
+# Run specific test
+pytest tests/test_triage_system.py
+```
+
+## 📊 Data Sources
+
+- **GUIDE Dataset**: Microsoft Security Incident Prediction dataset
+- **CICIDS2017**: Canadian Institute for Cybersecurity Intrusion Detection dataset
+
+## 🔧 Development
+
+### Adding New Agents
 
 ```python
-{
-    "final_result": "Incident assigned to: TeamName",
-    "triage_outcome": {
-        "status": "ACCEPTED",
-        "assigned_team": "TeamName",
-        "discussion_log": [...]
-    },
-    "analysis_result": {
-        "key_phrases": [...],
-        "relevant_docs": [...],
-        "llm_raw_response": "..."
-    },
-    "candidate_teams": [...]
-}
+from src.agents.base_agent import BaseLLMAgent
+
+class CustomAgent(BaseLLMAgent):
+    def __init__(self):
+        super().__init__("Custom Agent", "custom analysis agent")
+    
+    def analyze(self, data):
+        # Custom analysis logic
+        return self.call_llm(prompt)
 ```
 
-## File Structure
+### Adding New Data Sources
 
-```
-project/
-├── main.py                    # Main execution script
-├── triage_system.py          # Core system implementation
-├── download_kaggle_datasets.py # Data acquisition script
-├── data/                     # Data directory
-│   ├── guide/               # GUIDE dataset files
-│   ├── cicids2017/          # CICIDS2017 parquet files
-│   ├── guide_incidents.json # Processed GUIDE data
-│   ├── cicids_incidents.json # Processed CICIDS data
-│   └── team_function_docs.json # Team descriptions
-└── README.md               # This documentation
+```python
+from src.data.dataset_processor import DatasetProcessor
+
+class CustomDatasetProcessor(DatasetProcessor):
+    def process_custom_dataset(self, data):
+        # Custom processing logic
+        return processed_data
 ```
 
-## Performance Considerations
+## 📈 Performance
 
-- Data sampling limits (1000 samples by default) to manage memory usage
-- TF-IDF vectorization for efficient similarity computation
-- Parquet format for fast data loading
-- Caching of preprocessed data to avoid recomputation
+The system is designed for scalability:
 
-## Extensibility
+- **Parallel Processing**: Multiple agents can work simultaneously
+- **Caching**: TF-IDF models are cached for performance
+- **Batch Processing**: Support for processing multiple incidents
+- **Configurable Sample Sizes**: Adjustable dataset sizes for different use cases
 
-The system is designed for easy extension:
+## 🤝 Contributing
 
-- Add new agent types by inheriting from `LLMAgent`
-- Implement custom team selection algorithms
-- Integrate additional data sources
-- Customize negotiation and voting logic
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
-## Troubleshooting
+## 📄 License
 
-### Common Issues
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-1. **Missing Dependencies**: Ensure all required packages are installed
-2. **Kaggle API**: Verify `kaggle.json` is properly configured
-3. **Memory Issues**: Reduce sample sizes if processing large datasets
-4. **API Limits**: Monitor Azure OpenAI usage and rate limits
+## 🆘 Support
 
-### Logging
+For support and questions:
 
-The system provides detailed console output for each phase:
-- Data acquisition and preprocessing status
-- Agent decision rationales
-- Voting outcomes and team assignments
+- Create an issue on GitHub
+- Contact the development team
+- Check the documentation in `docs/`
 
-## Future Enhancements
+## 🔮 Roadmap
 
-- Real-time incident streaming
-- Advanced negotiation strategies
-- Performance metrics and evaluation
-- Web-based dashboard interface
-- Integration with existing ITSM systems
+- [ ] Web interface using Streamlit
+- [ ] REST API using FastAPI
+- [ ] Real-time monitoring dashboard
+- [ ] Integration with popular SIEM tools
+- [ ] Advanced ML models for improved accuracy
+- [ ] Multi-language support
+- [ ] Cloud deployment options
 
+---
+
+**AEGIS** - Empowering Security Operations with AI-Driven Triage
