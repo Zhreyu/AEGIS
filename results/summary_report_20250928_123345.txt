@@ -1,0 +1,28 @@
+AEGIS Triage System - Comprehensive Test Results
+==================================================
+
+Test Date: 2025-09-28 12:33:45
+Total Incidents: 510
+Processing Time: 7026.93 seconds
+Success Rate: 86.3%
+Accuracy Rate: 97.0%
+Average Time per Incident: 13.78 seconds
+Incidents per Second: 0.07
+
+Team Assignment Distribution:
+  SuspiciousActivity: 3 incidents
+  CommandAndControl: 4 incidents
+  Exfiltration: 1 incidents
+  InitialAccess: 1 incidents
+  Execution: 1 incidents
+  Benign: 369 incidents
+  DDoS: 29 incidents
+  DoS Hulk: 25 incidents
+  FTP-Patator: 2 incidents
+  Bot: 1 incidents
+  DoS slowloris: 2 incidents
+  SSH-Patator: 2 incidents
+
+Dataset Performance:
+  GUIDE Success Rate: 100.0%
+  CICIDS Success Rate: 86.0%

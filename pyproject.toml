@@ -11,6 +11,7 @@ dependencies = [
     "openai>=1.109.1",
     "pandas>=2.3.2",
     "pyarrow>=21.0.0",
+    "pyclean>=3.1.0",
     "scikit-learn>=1.7.2",
     "seaborn>=0.13.2",
 ]

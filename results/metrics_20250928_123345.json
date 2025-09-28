@@ -1,0 +1,48 @@
+{
+  "timestamp": "2025-09-28T12:33:45.461933",
+  "total_incidents": 510,
+  "processing_time_seconds": 7026.930958271027,
+  "average_time_per_incident": 13.778295996609856,
+  "success_metrics": {
+    "accepted": 440,
+    "rejected": 70,
+    "errors": 0,
+    "success_rate": 86.27450980392157,
+    "rejection_rate": 13.725490196078432,
+    "error_rate": 0.0
+  },
+  "team_metrics": {
+    "team_assignments": {
+      "SuspiciousActivity": 3,
+      "CommandAndControl": 4,
+      "Exfiltration": 1,
+      "InitialAccess": 1,
+      "Execution": 1,
+      "Benign": 369,
+      "DDoS": 29,
+      "DoS Hulk": 25,
+      "FTP-Patator": 2,
+      "Bot": 1,
+      "DoS slowloris": 2,
+      "SSH-Patator": 2
+    },
+    "unique_teams_assigned": 12,
+    "most_assigned_team": "Benign"
+  },
+  "dataset_metrics": {
+    "guide_incidents": 10,
+    "cicids_incidents": 500,
+    "guide_success_rate": 100.0,
+    "cicids_success_rate": 86.0
+  },
+  "accuracy_metrics": {
+    "correct_assignments": 427,
+    "total_with_ground_truth": 440,
+    "accuracy_rate": 97.04545454545455
+  },
+  "performance_metrics": {
+    "incidents_per_second": 0.07257791531304376,
+    "average_processing_time": 13.778295996609856,
+    "total_processing_time": 7026.930958271027
+  }
+}
