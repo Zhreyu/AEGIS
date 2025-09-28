@@ -1,6 +1,25 @@
-kaggle
-openai
-pandas
-pytest
-scikit_learn
-setuptools
+# AEGIS - Advanced Security Triage System Requirements
+
+# Core dependencies
+openai>=1.0.0
+scikit-learn>=1.3.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Data processing
+pyarrow>=12.0.0
+kaggle>=1.5.0
+
+# Visualization dependencies
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Testing dependencies
+pytest>=7.0.0
+
+# Optional dependencies for enhanced functionality
+# Uncomment as needed:
+# jupyter>=1.0.0     # For notebook support
+# streamlit>=1.25.0   # For web interface
+# fastapi>=0.100.0   # For API development
+# uvicorn>=0.23.0    # For API server

@@ -10,7 +10,7 @@ def download_dataset(dataset_name, path):
         print(f"Error downloading {dataset_name}: {e}")
 
 if __name__ == "__main__":
-    data_dir = "./data"
+    data_dir = "/home/zhreyas/Documents/GitHub/AEGIS/data/"
     os.makedirs(data_dir, exist_ok=True)
 
     # CICIDS2017 dataset

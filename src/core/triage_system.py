@@ -7,8 +7,8 @@ security incident triage process using multiple LLM agents.
 
 import json
 from typing import Dict, Any, List
-from src.data import DataManager
-from src.agents import (
+from ..data import DataManager
+from ..agents import (
     SemanticAnalyserAgent,
     TriageDeciderAgent,
     TeamManagerAgent,
