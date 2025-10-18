@@ -56,53 +56,55 @@ class SemanticAnalyserAgent(BaseLLMAgent):
         Returns:
             str: The formatted prompt
         """
-        return f"""You are an expert security incident analyst specializing in semantic analysis and key phrase extraction. Your task is to analyze incident descriptions and identify the most relevant key phrases and team function documents for triage purposes.
+        return f"""You are an expert cybersecurity analyst specializing in security incident triage using the MITRE ATT&CK framework. Analyze the security incident and identify discriminative key phrases and the most relevant team documents based on attack techniques and tactics.
 
 ## TASK
-Given an incident description and team function documents, perform two critical tasks:
-1. Extract key phrases that are most relevant for triaging this incident
-2. Identify which team function documents are most relevant to this incident
+Given a security incident description and team function documents, perform two critical tasks:
+1. Extract 3-7 discriminative key phrases that indicate specific MITRE ATT&CK techniques or tactics
+2. Identify 1-3 team documents that best match the incident based on attack patterns and security expertise
 
 ## FEW-SHOT EXAMPLES
 
 ### Example 1:
-**Incident:** "Database server experiencing high CPU usage, connection timeouts, and slow query response times. Multiple users reporting application errors 503."
-
-**Team Function Documents:** 
-- Network Operations: "Handles all network infrastructure issues, including latency, connectivity, and routing problems."
-- Database Team: "Manages database servers, ensures data integrity, and resolves database connection errors."
-- Web Operations: "Responsible for web server performance, application deployment, and front-end issues."
-
-**Analysis:**
-Key Phrases: database server, high CPU usage, connection timeouts, slow query response, application errors 503
-Relevant Docs: Database Team, Web Operations
-
-### Example 2:
-**Incident:** "Suspicious network activity detected: multiple failed login attempts from unknown IP address 192.168.1.100, potential brute force attack on admin portal."
+**Incident:** "Suspicious PowerShell execution detected with encoded commands, potential credential harvesting attempt from domain controller."
 
 **Team Function Documents:**
-- Brute-Force Attack: "Deals with incidents related to repeated, systematic attempts to guess credentials or encryption keys."
-- Network Operations: "Handles all network infrastructure issues, including latency, connectivity, and routing problems."
-- Infiltration: "Investigates unauthorized access and data exfiltration attempts within the network."
+- InitialAccess: "Handles incidents related to the initial compromise of systems, including phishing, malware delivery, exploitation of vulnerabilities."
+- CredentialAccess: "Investigates incidents involving techniques used by attackers to steal account names, passwords, and other credentials."
+- Execution: "Manages incidents involving the execution of malicious code, including web exploits and command execution on compromised systems."
 
 **Analysis:**
-Key Phrases: suspicious network activity, failed login attempts, unknown IP, brute force attack, admin portal
-Relevant Docs: Brute-Force Attack, Infiltration
+Key Phrases: PowerShell execution, encoded commands, credential harvesting, domain controller, suspicious activity
+Relevant Docs: CredentialAccess, Execution
+
+### Example 2:
+**Incident:** "Multiple failed authentication attempts detected from external IP, potential brute force attack targeting admin accounts with credential stuffing techniques."
+
+**Team Function Documents:**
+- InitialAccess: "Handles incidents related to the initial compromise of systems, including phishing, malware delivery, exploitation of vulnerabilities."
+- CredentialAccess: "Investigates incidents involving techniques used by attackers to steal account names, passwords, and other credentials."
+- SuspiciousActivity: "Monitors and investigates unusual or suspicious network behavior, system activities, and security events."
+
+**Analysis:**
+Key Phrases: failed authentication attempts, external IP, brute force attack, credential stuffing, admin accounts
+Relevant Docs: CredentialAccess, InitialAccess
 
 ## CURRENT INCIDENT TO ANALYZE
-**Incident:** {incident_description}
+Incident: {incident_description}
 
-**Team Function Documents:** {team_function_docs}
+TeamFunctionDocs: {team_function_docs}
 
-## INSTRUCTIONS
-1. Extract 3-7 key phrases that are most relevant for triaging this incident
-2. Identify 1-3 team function documents that are most relevant to this incident
-3. Format your response exactly as follows:
+## OUTPUT FORMAT (STRICT JSON)
+Return ONLY a single JSON object with keys exactly:
+{{
+  "key_phrases": ["phrase1", "phrase2", ...],
+  "relevant_docs": ["TeamName1", "TeamName2"]
+}}
 
-Key Phrases: [comma-separated list of key phrases]
-Relevant Docs: [comma-separated list of relevant document titles/IDs]
-
-Focus on technical terms, attack patterns, system components, and severity indicators that would help determine the appropriate team for triage."""
+Constraints:
+- key_phrases: 3-7 concise phrases, lowercase where natural, no duplicates
+- relevant_docs: must be subset of TeamFunctionDocs names, 1-3 items, ordered by relevance
+Do not include any text before or after the JSON."""
     
     def _parse_llm_response(self, llm_response: str) -> tuple[List[str], List[str]]:
         """
@@ -116,21 +118,38 @@ Focus on technical terms, attack patterns, system components, and severity indic
         """
         key_phrases = []
         relevant_docs = []
-        
-        if llm_response:
-            lines = llm_response.split("\n")
-            for line in lines:
-                if line.startswith("Key Phrases:"):
-                    key_phrases = [
-                        kp.strip() 
-                        for kp in line.replace("Key Phrases:", "").strip("[]").split(",") 
-                        if kp.strip()
-                    ]
-                elif line.startswith("Relevant Docs:"):
-                    relevant_docs = [
-                        rd.strip() 
-                        for rd in line.replace("Relevant Docs:", "").strip("[]").split(",") 
-                        if rd.strip()
-                    ]
-        
-        return key_phrases, relevant_docs
+
+        if not llm_response:
+            return key_phrases, relevant_docs
+
+        # Try JSON parsing first
+        try:
+            parsed = json.loads(llm_response)
+            kp = parsed.get("key_phrases", [])
+            rd = parsed.get("relevant_docs", [])
+            if isinstance(kp, list):
+                key_phrases = [str(x).strip() for x in kp if str(x).strip()]
+            if isinstance(rd, list):
+                relevant_docs = [str(x).strip() for x in rd if str(x).strip()]
+            return key_phrases[:7], relevant_docs[:3]
+        except Exception:
+            pass
+
+        # Fallback: attempt to extract arrays if model returned text
+        try:
+            start = llm_response.find("{")
+            end = llm_response.rfind("}")
+            if start != -1 and end != -1:
+                snippet = llm_response[start:end+1]
+                parsed = json.loads(snippet)
+                kp = parsed.get("key_phrases", [])
+                rd = parsed.get("relevant_docs", [])
+                if isinstance(kp, list):
+                    key_phrases = [str(x).strip() for x in kp if str(x).strip()]
+                if isinstance(rd, list):
+                    relevant_docs = [str(x).strip() for x in rd if str(x).strip()]
+        except Exception:
+            # Last resort: empty results
+            return key_phrases, relevant_docs
+
+        return key_phrases[:7], relevant_docs[:3]

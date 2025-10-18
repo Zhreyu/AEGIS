@@ -89,9 +89,23 @@ class TriageSystem:
         # Phase 2: Team Candidate Selection
         print("Phase 2: Team Candidate Selection...")
         candidate_teams = self.triage_decider.select_candidate_teams(
-            incident_description, 
+            incident_description,
             team_function_docs_str
         )
+
+        # Normalize candidate team names against known docs (simple aliasing)
+        known_docs = {doc["name"]: doc for doc in self.data_manager.get_team_function_docs()}
+        normalized_candidates = []
+        for t in candidate_teams:
+            if t in known_docs:
+                normalized_candidates.append(t)
+            else:
+                # Try case-insensitive match
+                match = next((k for k in known_docs.keys() if k.lower() == t.lower()), None)
+                if match:
+                    normalized_candidates.append(match)
+        if normalized_candidates:
+            candidate_teams = normalized_candidates
         print(f"  Candidate Teams: {candidate_teams}")
         
         # Phase 3: Incident Assignment Loop (Negotiation & Voting)

@@ -5,16 +5,14 @@ This module contains the base class for all LLM agents in the AEGIS system.
 """
 
 import os
-from openai import AzureOpenAI
+from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
-AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
-AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
-AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION")
-AZURE_OPENAI_DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 
 
 class BaseLLMAgent:
@@ -38,22 +36,18 @@ class BaseLLMAgent:
         self._client = None
     
     @property
-    def client(self) -> AzureOpenAI:
+    def client(self) -> OpenAI:
         """
-        Get or create the Azure OpenAI client.
+        Get or create the OpenAI client.
         
         Returns:
-            AzureOpenAI: The configured Azure OpenAI client
+            OpenAI: The configured OpenAI client
         """
         if self._client is None:
-            self._client = AzureOpenAI(
-                api_key=AZURE_OPENAI_API_KEY,
-                azure_endpoint=AZURE_OPENAI_ENDPOINT.split("/openai/deployments")[0],
-                api_version=AZURE_OPENAI_API_VERSION
-            )
+            self._client = OpenAI(api_key=OPENAI_API_KEY)
         return self._client
     
-    def call_llm(self, prompt: str, model: str = AZURE_OPENAI_DEPLOYMENT_NAME) -> str:
+    def call_llm(self, prompt: str, model: str = OPENAI_MODEL) -> str:
         """
         Call the LLM with a given prompt.
         
@@ -65,6 +59,11 @@ class BaseLLMAgent:
             str: The LLM response, or None if an error occurs
         """
         try:
+            # Check if API key is configured
+            if not OPENAI_API_KEY:
+                print(f"Error: OPENAI_API_KEY not configured for {self.name}")
+                return None
+            
             response = self.client.chat.completions.create(
                 model=model,
                 messages=[
