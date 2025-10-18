@@ -40,36 +40,22 @@ def main():
         print(format_system_status(status))
         print("="*50)
         
-        # Get incidents from both datasets
-        print("\n📊 Loading incident data from datasets...")
+        # Get incidents from GUIDE dataset only
+        print("\n📊 Loading incident data from GUIDE dataset...")
         guide_incidents = triage_system.data_manager.get_guide_data()
-        cicids_incidents = triage_system.data_manager.get_cicids_data()
         
         print(f"  📁 GUIDE dataset: {len(guide_incidents)} incidents")
-        print(f"  📁 CICIDS2017 dataset: {len(cicids_incidents)} incidents")
         
-        # Combine all incident descriptions for triage input
+        # Process GUIDE incidents
         all_incidents = []
         incident_metadata = []  # Store metadata for each incident
         
-        # Process GUIDE incidents
         for i, incident in enumerate(guide_incidents):
             all_incidents.append(incident.get("description", ""))
             incident_metadata.append({
                 "index": i,
                 "source": "GUIDE",
                 "id": incident.get("id", f"G{i}"),
-                "ground_truth_team": incident.get("ground_truth_team", "Unknown"),
-                "description": incident.get("description", "")
-            })
-        
-        # Process CICIDS incidents
-        for i, incident in enumerate(cicids_incidents):
-            all_incidents.append(incident.get("description", ""))
-            incident_metadata.append({
-                "index": len(guide_incidents) + i,
-                "source": "CICIDS2017",
-                "id": incident.get("id", f"C{i}"),
                 "ground_truth_team": incident.get("ground_truth_team", "Unknown"),
                 "description": incident.get("description", "")
             })
@@ -168,21 +154,16 @@ def generate_comprehensive_metrics(results: List[Dict[str, Any]],
         "most_assigned_team": max(team_assignments.items(), key=lambda x: x[1])[0] if team_assignments else None
     }
     
-    # Dataset-specific metrics
+    # Dataset-specific metrics (GUIDE only)
     guide_results = []
-    cicids_results = []
     
     for i, (result, metadata) in enumerate(zip(results, incident_metadata)):
         if metadata["source"] == "GUIDE":
             guide_results.append(result)
-        else:
-            cicids_results.append(result)
     
     metrics["dataset_metrics"] = {
         "guide_incidents": len(guide_results),
-        "cicids_incidents": len(cicids_results),
-        "guide_success_rate": calculate_success_rate(guide_results),
-        "cicids_success_rate": calculate_success_rate(cicids_results)
+        "guide_success_rate": calculate_success_rate(guide_results)
     }
     
     # Accuracy metrics (if ground truth is available)
@@ -284,7 +265,6 @@ def save_metrics_to_file(metrics: Dict[str, Any],
         
         f.write(f"\nDataset Performance:\n")
         f.write(f"  GUIDE Success Rate: {metrics['dataset_metrics']['guide_success_rate']:.1f}%\n")
-        f.write(f"  CICIDS Success Rate: {metrics['dataset_metrics']['cicids_success_rate']:.1f}%\n")
     
     print(f"📄 Summary report saved to: {summary_file}")
     
@@ -341,26 +321,24 @@ def generate_visualizations(metrics: Dict[str, Any],
             ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1, 
                     str(count), ha='center', va='bottom')
     
-    # 3. Dataset Performance Comparison
+    # 3. GUIDE Dataset Performance
     ax3 = plt.subplot(3, 4, 3)
     dataset_metrics = metrics['dataset_metrics']
-    datasets = ['GUIDE', 'CICIDS2017']
-    success_rates = [dataset_metrics['guide_success_rate'], dataset_metrics['cicids_success_rate']]
-    incident_counts = [dataset_metrics['guide_incidents'], dataset_metrics['cicids_incidents']]
+    success_rate = dataset_metrics['guide_success_rate']
+    incident_count = dataset_metrics['guide_incidents']
     
-    x = range(len(datasets))
-    width = 0.35
+    categories = ['Success Rate (%)', 'Incident Count']
+    values = [success_rate, incident_count]
+    colors = ['#9b59b6', '#e67e22']
     
-    bars1 = ax3.bar([i - width/2 for i in x], success_rates, width, label='Success Rate (%)', color='#9b59b6')
-    ax3_twin = ax3.twinx()
-    bars2 = ax3_twin.bar([i + width/2 for i in x], incident_counts, width, label='Incident Count', color='#e67e22')
+    bars = ax3.bar(categories, values, color=colors)
+    ax3.set_title('GUIDE Dataset Performance', fontsize=14, fontweight='bold')
+    ax3.set_ylabel('Value')
     
-    ax3.set_xlabel('Datasets')
-    ax3.set_ylabel('Success Rate (%)', color='#9b59b6')
-    ax3_twin.set_ylabel('Incident Count', color='#e67e22')
-    ax3.set_title('Dataset Performance Comparison', fontsize=14, fontweight='bold')
-    ax3.set_xticks(x)
-    ax3.set_xticklabels(datasets)
+    # Add value labels
+    for bar, value in zip(bars, values):
+        ax3.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1, 
+                f'{value:.1f}', ha='center', va='bottom')
     
     # 4. Processing Time Analysis
     ax4 = plt.subplot(3, 4, 4)
@@ -489,31 +467,26 @@ def generate_visualizations(metrics: Dict[str, Any],
     ax10.set_ylabel('Success Rate (%)')
     ax10.grid(True, alpha=0.3)
     
-    # 11. Dataset Comparison
+    # 11. GUIDE Dataset Success Analysis
     ax11 = plt.subplot(3, 4, 11)
     guide_data = [r for r, m in zip(results, incident_metadata) if m['source'] == 'GUIDE']
-    cicids_data = [r for r, m in zip(results, incident_metadata) if m['source'] == 'CICIDS2017']
     
     guide_success = sum(1 for r in guide_data if r.get('triage_outcome', {}).get('status') == 'ACCEPTED')
-    cicids_success = sum(1 for r in cicids_data if r.get('triage_outcome', {}).get('status') == 'ACCEPTED')
+    guide_failed = len(guide_data) - guide_success
     
-    datasets = ['GUIDE', 'CICIDS2017']
-    success_counts = [guide_success, cicids_success]
-    total_counts = [len(guide_data), len(cicids_data)]
+    categories = ['Successful', 'Failed']
+    counts = [guide_success, guide_failed]
+    colors = ['#2ecc71', '#e74c3c']
     
-    x = range(len(datasets))
-    width = 0.35
-    
-    bars1 = ax11.bar([i - width/2 for i in x], success_counts, width, label='Successful', color='#2ecc71')
-    bars2 = ax11.bar([i + width/2 for i in x], [t - s for t, s in zip(total_counts, success_counts)], 
-                    width, label='Failed', color='#e74c3c')
-    
-    ax11.set_xlabel('Dataset')
+    bars = ax11.bar(categories, counts, color=colors)
+    ax11.set_xlabel('Outcome')
     ax11.set_ylabel('Number of Incidents')
-    ax11.set_title('Dataset Success Comparison', fontsize=12, fontweight='bold')
-    ax11.set_xticks(x)
-    ax11.set_xticklabels(datasets)
-    ax11.legend()
+    ax11.set_title('GUIDE Dataset Success Analysis', fontsize=12, fontweight='bold')
+    
+    # Add value labels
+    for bar, count in zip(bars, counts):
+        ax11.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1, 
+                str(count), ha='center', va='bottom')
     
     # 12. Summary Statistics
     ax12 = plt.subplot(3, 4, 12)
@@ -521,6 +494,7 @@ def generate_visualizations(metrics: Dict[str, Any],
     
     summary_text = f"""
     AEGIS TRIAGE SYSTEM SUMMARY
+    (GUIDE Dataset Only)
     
     Total Incidents: {metrics['total_incidents']}
     Processing Time: {metrics['processing_time_seconds']:.2f}s
@@ -533,7 +507,6 @@ def generate_visualizations(metrics: Dict[str, Any],
     Most Assigned: {metrics['team_metrics']['most_assigned_team'] or 'N/A'}
     
     GUIDE Success: {dataset_metrics['guide_success_rate']:.1f}%
-    CICIDS Success: {dataset_metrics['cicids_success_rate']:.1f}%
     """
     
     ax12.text(0.05, 0.95, summary_text, transform=ax12.transAxes, fontsize=10,
@@ -669,7 +642,6 @@ def display_comprehensive_summary(metrics: Dict[str, Any], results: List[Dict[st
     dataset_metrics = metrics['dataset_metrics']
     print(f"\n📁 DATASET PERFORMANCE:")
     print(f"  GUIDE Incidents: {dataset_metrics['guide_incidents']} (Success: {dataset_metrics['guide_success_rate']:.1f}%)")
-    print(f"  CICIDS Incidents: {dataset_metrics['cicids_incidents']} (Success: {dataset_metrics['cicids_success_rate']:.1f}%)")
     
     # Accuracy
     accuracy_metrics = metrics['accuracy_metrics']
