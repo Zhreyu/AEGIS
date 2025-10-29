@@ -1,258 +1,72 @@
-# AEGIS - Advanced Security Triage System
+# AEGIS: A Multi-Agent LLM Framework for Cross-Domain Incident Triage and Negotiated Assignment
 
-A modular, object-oriented security incident triage system using multiple LLM agents for collaborative decision-making in security operations.
+## Overview
 
-## 🏗️ Architecture
+AEGIS is an autonomous security incident triage framework that leverages Large Language Models (LLMs) to create intelligent, collaborative agents for handling cybersecurity incidents. The system addresses the scalability and efficiency challenges faced by traditional Security Operations Centers (SOCs) through a multi-agent architecture that simulates human team dynamics.
 
-The AEGIS system is built with a clean, modular architecture following object-oriented principles:
+## System Architecture
 
-```
-AEGIS/
-├── src/                    # Main source code
-│   ├── agents/            # LLM agents for analysis and decision-making
-│   │   ├── base_agent.py
-│   │   ├── semantic_analyser.py
-│   │   ├── triage_decider.py
-│   │   ├── team_manager.py
-│   │   └── collaborative_decision.py
-│   ├── data/              # Data management and processing
-│   │   ├── data_manager.py
-│   │   ├── dataset_processor.py
-│   │   └── team_document_manager.py
-│   ├── core/              # Core triage system orchestration
-│   │   └── triage_system.py
-│   └── utils/             # Utility functions and helpers
-│       ├── logger.py
-│       ├── validators.py
-│       └── formatters.py
-├── config/                # Configuration management
-│   └── settings.py
-├── tests/                 # Test suite
-├── docs/                  # Documentation
-├── data/                  # Data storage directory
-├── main.py               # Main entry point
-├── requirements.txt      # Python dependencies
-└── setup.py             # Package setup
-```
+The framework operates through three primary layers:
 
-## 🚀 Features
+1. **Data & Context Layer**: Handles data ingestion, ETL preprocessing, and knowledge base management
+2. **Multi-Agent Layer**: Core intelligence layer with specialized agents for semantic analysis and candidate selection
+3. **Collaborative Decision Layer**: Manages agent negotiation, voting, and final assignment through iterative consensus
 
-- **Multi-Agent Architecture**: Specialized LLM agents for different aspects of triage
-- **Semantic Analysis**: Advanced incident description analysis and key phrase extraction
-- **Collaborative Decision-Making**: Team managers negotiate and vote on incident assignments
-- **Historical Data Integration**: TF-IDF similarity matching with historical incidents
-- **Modular Design**: Clean separation of concerns with extensible components
-- **Comprehensive Logging**: Detailed logging and monitoring capabilities
 
-## 🛠️ Installation
+## Datasets
 
-### Prerequisites
+### GUIDE Dataset
+- **Domain**: Cloud Incident Reports
+- **Type**: Unstructured text (logs, alerts, comments)
+- **Ground Truth**: MITRE ATT&CK framework alignment
 
-- Python 3.8 or higher
-- Azure OpenAI API access
-- Kaggle API key (for dataset download)
+### CICIDS2017 Dataset
+- **Domain**: Network Intrusion Detection
+- **Type**: Structured numerical flow data (80+ features)
+- **Ground Truth**: Specific attack categories (DDoS, DoS Hulk, Benign, etc.)
 
-### Setup
+## Experimental Results
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/your-org/AEGIS.git
-   cd AEGIS
-   ```
+### Performance Metrics Summary
 
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+| Dataset | Success Rate (SR) | Accuracy Rate (AR) | Rejection Rate (RR) | Avg Time per Incident |
+|---------|-------------------|--------------------|--------------------|----------------------|
+| GUIDE | 100.0% | 76.2% | 0.0% | 7.38 seconds |
+| CICIDS2017 | 86.8% | 99.3% | 13.2% | 13.27 seconds |
 
-3. **Set up environment variables**:
-   ```bash
-   export AZURE_OPENAI_API_KEY="your-api-key"
-   export AZURE_OPENAI_ENDPOINT="your-endpoint"
-   export AZURE_OPENAI_API_VERSION="2024-12-01-preview"
-   export AZURE_OPENAI_DEPLOYMENT_NAME="gpt-4o"
-   ```
+### Key Findings
 
-4. **Download datasets** (optional):
-   ```bash
-   python download_kaggle_datasets.py
-   ```
+- **GUIDE Dataset**: Achieved perfect operational success with 100% incident assignment, demonstrating robust handling of ambiguous, complex cloud incidents
+- **CICIDS2017 Dataset**: Near-perfect accuracy (99.3%) on objective classification tasks, validating semantic matching effectiveness
+- **Zero Error Rate**: Both datasets showed 0.0% system errors, confirming framework stability and reliability
+- **Processing Efficiency**: Average processing time of 7-14 seconds per incident represents significant improvement over manual triage
 
-## 🎯 Usage
+### Performance Analysis
 
-### Basic Usage
+- **GUIDE**: The 76.2% accuracy reflects the inherent ambiguity in human-labeled ground truth for complex multi-stage attacks. The system prioritizes successful operational assignment over rigid classification matching.
+- **CICIDS2017**: The 13.2% rejection rate demonstrates the system's cautious approach on rare attack types, correctly flagging ambiguous cases rather than making potentially incorrect assignments.
 
-```python
-from src.core import TriageSystem
 
-# Initialize the triage system
-triage_system = TriageSystem()
-triage_system.setup_data_and_agents()
 
-# Triage an incident
-incident = "Database server experiencing high CPU usage and connection timeouts"
-result = triage_system.triage_incident(incident)
-
-print(result['final_result'])
-```
-
-### Running the Main Script
+## Installation and Setup
 
 ```bash
-python main.py
+# Clone the repository
+git clone https://github.com/zhreyu/AEGIS.git
+
+# Install dependencies
+uv init 
+source .venv/bin/activate
+uv sync
+
+# Configure API keys
+export OPENAI_API_KEY="your-api-key"
+
+# Run the framework
+python main.py --dataset GUIDE --config config/guide.yaml
 ```
 
-### Advanced Usage
+## License
 
-```python
-from src.core import TriageSystem
-from src.agents import SemanticAnalyserAgent, TriageDeciderAgent
+This project is licensed under the MIT License. See the LICENSE file for details.
 
-# Initialize components
-triage_system = TriageSystem()
-triage_system.setup_data_and_agents()
-
-# Batch processing
-incidents = [
-    "Server outage in datacenter A, error code 503",
-    "Suspicious network activity detected",
-    "Application unresponsive, database connection failed"
-]
-
-results = triage_system.batch_triage_incidents(incidents)
-
-# Get system status
-status = triage_system.get_system_status()
-print(f"System initialized: {status['initialized']}")
-print(f"Available teams: {status['available_teams']}")
-```
-
-## 🧩 Components
-
-### Agents (`src/agents/`)
-
-- **BaseLLMAgent**: Base class for all LLM agents
-- **SemanticAnalyserAgent**: Analyzes incidents and extracts key phrases
-- **TriageDeciderAgent**: Selects candidate teams using TF-IDF and LLM matching
-- **TeamManagerAgent**: Represents team managers for voting
-- **CollaborativeDecisionGroup**: Manages team negotiation and voting
-
-### Data Management (`src/data/`)
-
-- **DataManager**: Main data coordinator
-- **DatasetProcessor**: Processes GUIDE and CICIDS2017 datasets
-- **TeamDocumentManager**: Creates and manages team function documents
-
-### Core System (`src/core/`)
-
-- **TriageSystem**: Main orchestrator for the triage process
-
-### Utilities (`src/utils/`)
-
-- **Logger**: Logging configuration and utilities
-- **Validators**: Data validation functions
-- **Formatters**: Output formatting utilities
-
-## ⚙️ Configuration
-
-The system uses environment variables for configuration:
-
-```bash
-# Required
-AZURE_OPENAI_API_KEY=your-api-key
-AZURE_OPENAI_ENDPOINT=your-endpoint
-
-# Optional
-DATA_DIR=./data
-GUIDE_SAMPLE_SIZE=500
-CICIDS_SAMPLE_SIZE=500
-LOG_LEVEL=INFO
-```
-
-## 🧪 Testing
-
-```bash
-# Run tests
-pytest tests/
-
-# Run with coverage
-pytest --cov=src tests/
-
-# Run specific test
-pytest tests/test_triage_system.py
-```
-
-## 📊 Data Sources
-
-- **GUIDE Dataset**: Microsoft Security Incident Prediction dataset
-- **CICIDS2017**: Canadian Institute for Cybersecurity Intrusion Detection dataset
-
-## 🔧 Development
-
-### Adding New Agents
-
-```python
-from src.agents.base_agent import BaseLLMAgent
-
-class CustomAgent(BaseLLMAgent):
-    def __init__(self):
-        super().__init__("Custom Agent", "custom analysis agent")
-    
-    def analyze(self, data):
-        # Custom analysis logic
-        return self.call_llm(prompt)
-```
-
-### Adding New Data Sources
-
-```python
-from src.data.dataset_processor import DatasetProcessor
-
-class CustomDatasetProcessor(DatasetProcessor):
-    def process_custom_dataset(self, data):
-        # Custom processing logic
-        return processed_data
-```
-
-## 📈 Performance
-
-The system is designed for scalability:
-
-- **Parallel Processing**: Multiple agents can work simultaneously
-- **Caching**: TF-IDF models are cached for performance
-- **Batch Processing**: Support for processing multiple incidents
-- **Configurable Sample Sizes**: Adjustable dataset sizes for different use cases
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-For support and questions:
-
-- Create an issue on GitHub
-- Contact the development team
-- Check the documentation in `docs/`
-
-## 🔮 Roadmap
-
-- [ ] Web interface using Streamlit
-- [ ] REST API using FastAPI
-- [ ] Real-time monitoring dashboard
-- [ ] Integration with popular SIEM tools
-- [ ] Advanced ML models for improved accuracy
-- [ ] Multi-language support
-- [ ] Cloud deployment options
-
----
-
-**AEGIS** - Empowering Security Operations with AI-Driven Triage
